@@ -1,0 +1,119 @@
+name: AGGRO vs Stockfish match
+
+# Manual workflow: builds this fork and official Stockfish, then plays a match
+# between them with fastchess. Start it from the Actions tab ("Run workflow").
+
+on:
+  workflow_dispatch:
+    inputs:
+      aggression:
+        description: "Aggression value for AGGRO (0-100)"
+        default: "50"
+        required: true
+      games:
+        description: "Number of games (even number)"
+        default: "50"
+        required: true
+      tc:
+        description: "Time control per side, fastchess format (seconds+increment)"
+        default: "10+0.1"
+        required: true
+      upstream_ref:
+        description: "Official Stockfish branch, tag or commit to play against"
+        default: "master"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  match:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      ARCH: x86-64-avx2
+      AGGRESSION: ${{ inputs.aggression }}
+      GAMES: ${{ inputs.games }}
+      TC: ${{ inputs.tc }}
+      UPSTREAM_REF: ${{ inputs.upstream_ref }}
+    steps:
+      - name: Check inputs
+        run: |
+          case "$AGGRESSION" in ''|*[!0-9]*) echo "aggression must be a number"; exit 1;; esac
+          case "$GAMES" in ''|*[!0-9]*) echo "games must be a number"; exit 1;; esac
+          if [ "$AGGRESSION" -gt 100 ]; then echo "aggression must be 0-100"; exit 1; fi
+          if [ "$GAMES" -lt 2 ] || [ $(( GAMES % 2 )) -ne 0 ]; then
+            echo "games must be an even number, at least 2"; exit 1
+          fi
+          case "$TC" in *[!0-9.+/:]*|'') echo "tc must look like 10+0.1"; exit 1;; esac
+
+      - name: Check out this fork
+        uses: actions/checkout@v4
+        with:
+          path: aggro
+
+      - name: Check out official Stockfish
+        uses: actions/checkout@v4
+        with:
+          repository: official-stockfish/Stockfish
+          ref: ${{ inputs.upstream_ref }}
+          path: official
+
+      - name: Build AGGRO
+        working-directory: aggro/src
+        run: make -j"$(nproc)" build ARCH=$ARCH
+
+      - name: Build official Stockfish
+        working-directory: official/src
+        run: make -j"$(nproc)" build ARCH=$ARCH
+
+      - name: Build fastchess
+        run: |
+          git clone --depth 1 https://github.com/Disservin/fastchess.git fastchess-src
+          make -C fastchess-src -j"$(nproc)"
+          cp fastchess-src/fastchess ./fastchess
+
+      - name: Get opening book
+        run: |
+          curl -fsSL -o 8moves_v3.pgn.zip \
+            https://github.com/official-stockfish/books/raw/master/8moves_v3.pgn.zip
+          unzip -o 8moves_v3.pgn.zip
+
+      - name: Play match
+        run: |
+          ROUNDS=$(( GAMES / 2 ))
+          # Each game uses two single-threaded engines, so run half as many games as cores.
+          CONC=$(( $(nproc) / 2 ))
+          if [ "$CONC" -lt 1 ]; then CONC=1; fi
+
+          ./fastchess \
+            -engine cmd="$GITHUB_WORKSPACE/aggro/src/stockfish" name=AGGRO option.Aggression="$AGGRESSION" \
+            -engine cmd="$GITHUB_WORKSPACE/official/src/stockfish" name=Stockfish \
+            -each tc="$TC" option.Hash=64 option.Threads=1 \
+            -openings file=8moves_v3.pgn format=pgn order=random \
+            -rounds "$ROUNDS" -games 2 -repeat \
+            -concurrency "$CONC" \
+            -pgnout file=games.pgn \
+            2>&1 | tee match.log
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## AGGRO vs Stockfish"
+            echo
+            echo "Aggression $AGGRESSION, $GAMES games, tc $TC, upstream $UPSTREAM_REF ($(git -C official rev-parse --short HEAD))"
+            echo
+            echo '```'
+            tail -n 30 match.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload games and log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: match-aggression-${{ inputs.aggression }}
+          path: |
+            games.pgn
+            match.log
