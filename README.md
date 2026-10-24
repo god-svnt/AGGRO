@@ -1,4 +1,11 @@
+
+
+
+
+
 <div align="center">
+
+AGGRO as I've named it, is just a fork of stockfish but made to play aggressive by adding an aggression value. Surprisingly works.
 
 [authors-link]:       https://github.com/official-stockfish/Stockfish/blob/master/AUTHORS
 [build-link]:         https://github.com/official-stockfish/Stockfish/actions/workflows/stockfish.yml
