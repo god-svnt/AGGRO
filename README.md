@@ -3,9 +3,61 @@
 
 
 
-<div align="center">
+# Talfish
 
-AGGRO as I've named it, is just a fork of stockfish but made to play aggressive by adding an aggression value. Surprisingly works.
+Talfish (AGGRO, as I've named it) is just a fork of [Stockfish][website-link] but made to play aggressive by adding an aggression value. Surprisingly works.
+
+> **This is a modified version of Stockfish and is not the official Stockfish engine.**
+> It is not affiliated with or endorsed by the Stockfish developers. The original
+> project lives at <https://github.com/official-stockfish/Stockfish>.
+
+## License
+
+Talfish is a derivative work of Stockfish and, like Stockfish, is free software
+distributed under the **GNU General Public License, version 3 or (at your option)
+any later version**.
+
+- The full license text is in [`Copying.txt`](Copying.txt) in this repository
+  (official copy: [Stockfish `Copying.txt`][license-link]).
+- GPLv3 on gnu.org: <https://www.gnu.org/licenses/gpl-3.0.html>
+- Every source file keeps its original Stockfish copyright and license header.
+  Please do not remove them.
+
+In short, you are free to use, modify and redistribute this engine, provided that:
+
+1. you keep the license and copyright notices intact,
+2. you mark your changes as modified versions,
+3. you license the whole work under the GPL as well, and
+4. you make the corresponding source code available to anyone you give binaries to.
+
+This summary is not legal advice. The license text in `Copying.txt` is what applies.
+
+## Credits
+
+Talfish exists thanks to the work of the Stockfish project and everyone who has
+contributed to it.
+
+- **Stockfish authors:** see the [`AUTHORS`](AUTHORS) file in this repository
+  (official list: [Stockfish AUTHORS][authors-link]).
+- **Founders:** Tord Romstad, Marco Costalba, Joona Kiiski and Gary Linscott.
+- **NNUE:** Yu Nasu, Motohiro Isozaki and Hisayori Noda, authors and inventors of
+  NNUE and its Stockfish port.
+- **Stockfish website:** <https://stockfishchess.org>
+- **Source code:** [official-stockfish/Stockfish][src-link]
+- **Testing framework:** [Fishtest][fishtest-link], which the Stockfish project
+  relies on for development.
+- **Glaurung:** Stockfish is derived from Glaurung 2.1 by Tord Romstad.
+
+Stockfish's neural network training data is derived in part from Leela Chess Zero
+data ([lc0 training data][lc0-data-link]), used under the
+[ODbL][odbl-link]. See the [official README][readme-link] for details on that.
+
+## Modifications
+
+Compared to upstream Stockfish, this fork adds an aggression value to the search to
+make the engine play more aggressively. All other code is Stockfish's. For
+everything else (compiling, UCI commands, usage), see the
+[Stockfish wiki][wiki-link].
 
 [authors-link]:       https://github.com/official-stockfish/Stockfish/blob/master/AUTHORS
 [build-link]:         https://github.com/official-stockfish/Stockfish/actions/workflows/stockfish.yml
