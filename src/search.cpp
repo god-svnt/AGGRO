@@ -2200,7 +2200,7 @@ Move Search::Worker::pick_aggressive(usize multiPV, int aggression) {
             points += 15;
 
         StateInfo st;
-        rootPos.do_move(m, st, &tt);
+        rootPos.do_move(m, st);
 
         // Few legal replies means the opponent has to find the only moves
         const int replies = int(MoveList<ALL>(rootPos).size());
